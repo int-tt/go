@@ -108,15 +108,15 @@ type HostnameError struct {
 
 func (h HostnameError) Error() string {
 	c := h.Certificate
-	if !validHostname(h.Host) {
-		return "x509: Server Name Indication is not a valid hostname: " + h.Host
-	}
+
 	if !c.hasSANExtension() && !validHostname(c.Subject.CommonName) &&
 		matchHostnames(toLowerCaseASCII(c.Subject.CommonName), toLowerCaseASCII(h.Host)) {
 		// This would have validated, if it weren't for the validHostname check on Common Name.
 		return "x509: Common Name is not a valid hostname: " + c.Subject.CommonName
 	}
-
+	if !validHostname(h.Host) {
+		return "x509: Server Name Indication is not a valid hostname: " + h.Host
+	}
 	var valid string
 	if ip := net.ParseIP(h.Host); ip != nil {
 		// Trying to validate an IP
@@ -136,7 +136,6 @@ func (h HostnameError) Error() string {
 			valid = strings.Join(c.DNSNames, ", ")
 		}
 	}
-
 	if len(valid) == 0 {
 		return "x509: certificate is not valid for any names, but wanted to match " + h.Host
 	}
