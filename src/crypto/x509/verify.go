@@ -114,7 +114,9 @@ func (h HostnameError) Error() string {
 		// This would have validated, if it weren't for the validHostname check on Common Name.
 		return "x509: Common Name is not a valid hostname: " + c.Subject.CommonName
 	}
-
+	if !validHostname(h.Host) {
+		return "x509: Server Name Indication is not a valid hostname: " + h.Host
+	}
 	var valid string
 	if ip := net.ParseIP(h.Host); ip != nil {
 		// Trying to validate an IP
@@ -134,7 +136,6 @@ func (h HostnameError) Error() string {
 			valid = strings.Join(c.DNSNames, ", ")
 		}
 	}
-
 	if len(valid) == 0 {
 		return "x509: certificate is not valid for any names, but wanted to match " + h.Host
 	}
@@ -996,6 +997,9 @@ func (c *Certificate) VerifyHostname(h string) error {
 		return HostnameError{c, candidateIP}
 	}
 
+	if !validHostname(h) {
+		return HostnameError{c, h}
+	}
 	lowered := toLowerCaseASCII(h)
 
 	if c.commonNameAsHostname() {

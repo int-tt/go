@@ -352,6 +352,10 @@ func TestMatchIP(t *testing.T) {
 		t.Fatalf("VerifyHostname(quux.foo.bar.baz): %v", err)
 	}
 
+	err = c.VerifyHostname("https://quux.foo.bar.baz")
+	if err == nil {
+		t.Fatalf("VerifyHostname(https://quux.foo.bar.baz): should have failed, did not")
+	}
 	// But check that if we change it to be matching against an IP address,
 	// it is rejected.
 	c = &Certificate{
