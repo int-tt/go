@@ -108,7 +108,9 @@ type HostnameError struct {
 
 func (h HostnameError) Error() string {
 	c := h.Certificate
-
+	if !validHostname(h.Host) {
+		return "x509: Server Name Indication is not a valid hostname: " + h.Host
+	}
 	if !c.hasSANExtension() && !validHostname(c.Subject.CommonName) &&
 		matchHostnames(toLowerCaseASCII(c.Subject.CommonName), toLowerCaseASCII(h.Host)) {
 		// This would have validated, if it weren't for the validHostname check on Common Name.
@@ -996,6 +998,9 @@ func (c *Certificate) VerifyHostname(h string) error {
 		return HostnameError{c, candidateIP}
 	}
 
+	if !validHostname(h) {
+		return HostnameError{c, h}
+	}
 	lowered := toLowerCaseASCII(h)
 
 	if c.commonNameAsHostname() {
